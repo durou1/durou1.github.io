@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>自习室预约系统（20座）</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#101833;
+      --card2:#0f1630;
+      --text:#e7ecff;
+      --muted:#a9b4e6;
+      --line:rgba(255,255,255,.10);
+      --pri:#5b8cff;
+      --ok:#2dd4bf;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
+      --focus:0 0 0 3px rgba(91,140,255,.25);
+      --seat: #1a2652;
+      --seat2:#15204a;
+      --seatText:#e9eeff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "PingFang SC","Hiragino Sans GB","Microsoft YaHei", sans-serif;
+      background: radial-gradient(1200px 700px at 15% 10%, rgba(91,140,255,.18), transparent 60%),
+                  radial-gradient(1000px 600px at 85% 0%, rgba(45,212,191,.12), transparent 55%),
+                  radial-gradient(900px 500px at 55% 100%, rgba(251,113,133,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit}
+    button, input, select{font:inherit}
+    .app{
+      max-width:1200px;
+      margin:0 auto;
+      padding:18px 14px 40px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      position:sticky;
+      top:10px;
+      z-index:20;
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 180px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background: conic-gradient(from 210deg, rgba(91,140,255,.95), rgba(45,212,191,.95), rgba(251,191,36,.95), rgba(251,113,133,.95), rgba(91,140,255,.95));
+      box-shadow: 0 10px 24px rgba(0,0,0,.30);
+    }
+    .brand h1{margin:0;font-size:16px;line-height:1.1}
+    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      display:flex;align-items:center;gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(16,24,51,.55);
+      color:var(--muted);
+      max-width: 100%;
+    }
+    .pill strong{color:var(--text);font-weight:650}
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(16,24,51,.65);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(18,28,62,.72); border-color: rgba(255,255,255,.16)}
+    .btn:active{transform: translateY(1px)}
+    .btn:focus{outline:none; box-shadow: var(--focus)}
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(91,140,255,.95), rgba(91,140,255,.72));
+      border-color: rgba(91,140,255,.45);
+    }
+    .btn.primary:hover{filter:brightness(1.03)}
+    .btn.ghost{background:transparent}
+    .btn.danger{
+      background: linear-gradient(180deg, rgba(251,113,133,.95), rgba(251,113,133,.70));
+      border-color: rgba(251,113,133,.45);
+    }
+    .btn.ok{
+      background: linear-gradient(180deg, rgba(45,212,191,.95), rgba(45,212,191,.70));
+      border-color: rgba(45,212,191,.45);
+    }
+    .main{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+      background: rgba(16,24,51,.35);
+    }
+    .card .hd h2{margin:0;font-size:14px}
+    .card .hd .hint{font-size:12px;color:var(--muted)}
+    .card .bd{padding:14px}
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .grid3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px}
+    .field{display:flex; flex-direction:column; gap:6px; min-width:0}
+    .field label{font-size:12px;color:var(--muted)}
+    .field input, .field select{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(11,16,32,.45);
+      color:var(--text);
+    }
+    .field input:focus, .field select:focus{outline:none; box-shadow: var(--focus); border-color: rgba(91,140,255,.5)}
+    .seg{
+      display:flex; gap:8px; flex-wrap:wrap;
+      padding:10px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(11,16,32,.35);
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(16,24,51,.55);
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip input{accent-color: var(--pri)}
+    .chip strong{font-size:12px}
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .row.end{justify-content:flex-end}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:10px;
+      background: rgba(11,16,32,.28);
+    }
+    .kpi .n{font-size:18px;font-weight:750}
+    .kpi .t{font-size:12px;color:var(--muted);margin-top:3px}
+    .seatWrap{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    .seatLegend{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(11,16,32,.30);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .dot{width:10px;height:10px;border-radius:99px}
+    .dot.ok{background:var(--ok)}
+    .dot.warn{background:var(--warn)}
+    .dot.bad{background:var(--bad)}
+    .dot.neu{background:#93c5fd}
+    .seatGrid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:10px;
+    }
+    .seat{
+      position:relative;
+      border-radius: 16px;
+      padding:10px 10px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(26,38,82,.90), rgba(21,32,74,.78));
+      cursor:pointer;
+      min-height:64px;
+      transition: transform .06s ease, border-color .15s ease, background .15s ease;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      justify-content:center;
+      user-select:none;
+    }
+    .seat:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.20)}
+    .seat:active{transform: translateY(0px)}
+    .seat:focus{outline:none; box-shadow: var(--focus)}
+    .seat .no{font-weight:800;font-size:16px; letter-spacing:.4px}
+    .seat .st{font-size:12px;color:var(--muted)}
+    .seat .me{font-size:12px;color: rgba(231,236,255,.92); display:none}
+    .seat.mine .me{display:block}
+    .seat .bar{
+      position:absolute; inset:auto 0 0 0;
+      height:4px;
+      background: rgba(255,255,255,.12);
+    }
+    .seat.available .bar{background: rgba(45,212,191,.95)}
+    .seat.reserved .bar{background: rgba(251,191,36,.95)}
+    .seat.inuse .bar{background: rgba(251,113,133,.95)}
+    .seat.disabled{
+      cursor:not-allowed;
+      opacity:.9;
+    }
+    .seat.disabled:hover{transform:none}
+    .seat .badge{
+      position:absolute; top:10px; right:10px;
+      padding:6px 8px;
+      border-radius:999px;
+      font-size:11px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(11,16,32,.35);
+      color:var(--muted);
+    }
+    .seat.available .badge{color: rgba(45,212,191,.95)}
+    .seat.reserved .badge{color: rgba(251,191,36,.95)}
+    .seat.inuse .badge{color: rgba(251,113,133,.95)}
+    .panelTabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      padding:12px 14px 0;
+    }
+    .tab{
+      padding:9px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(11,16,32,.25);
+      color:var(--muted);
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      color:var(--text);
+      background: rgba(91,140,255,.18);
+      border-color: rgba(91,140,255,.35);
+    }
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .item{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:10px;
+      background: rgba(11,16,32,.25);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .item .meta{display:flex; flex-direction:column; gap:4px; min-width:0}
+    .item .meta .t{font-weight:700}
+    .item .meta .s{font-size:12px;color:var(--muted)}
+    .item .act{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
+    .empty{
+      border:1px dashed rgba(255,255,255,.16);
+      border-radius: 14px;
+      padding:16px;
+      text-align:center;
+      color:var(--muted);
+      background: rgba(11,16,32,.18);
+    }
+    .calendar{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(11,16,32,.25);
+      overflow:hidden;
+    }
+    .calHd{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      gap:8px;
+    }
+    .calHd .m{font-weight:800}
+    .calHd .btn{
+      padding:7px 9px;
+      border-radius: 12px;
+    }
+    .calGrid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0;
+    }
+    .calCell, .calDow{
+      padding:8px 8px;
+      border-right:1px solid rgba(255,255,255,.06);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      min-height:44px;
+    }
+    .calDow{
+      font-size:11px;
+      color:var(--muted);
+      background: rgba(16,24,51,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      min-height:auto;
+      padding:9px 0;
+    }
+    .calCell{
+      position:relative;
+      cursor:pointer;
+      user-select:none;
+      background: rgba(11,16,32,.12);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      justify-content:space-between;
+    }
+    .calCell:hover{background: rgba(91,140,255,.10)}
+    .calCell.mute{opacity:.45; cursor:default}
+    .calCell.mute:hover{background: rgba(11,16,32,.12)}
+    .calCell .d{
+      font-weight:800;
+      font-size:12px;
+      color: rgba(231,236,255,.95);
+    }
+    .calCell .pips{
+      display:flex; gap:4px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .pip{
+      height:6px; width:6px; border-radius:99px; background: rgba(255,255,255,.20);
+    }
+    .pip.ok{background: rgba(45,212,191,.95)}
+    .pip.warn{background: rgba(251,191,36,.95)}
+    .pip.bad{background: rgba(251,113,133,.95)}
+    .calCell.sel{
+      outline: 2px solid rgba(91,140,255,.55);
+      outline-offset: -2px;
+      background: rgba(91,140,255,.14);
+    }
+    .toastHost{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 50;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      width: min(380px, calc(100vw - 28px));
+      pointer-events:none;
+    }
+    .toast{
+      pointer-events: all;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(16,24,51,.88);
+      box-shadow: var(--shadow);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      backdrop-filter: blur(10px);
+    }
+    .toast .ic{
+      width:10px;height:10px;border-radius:99px;
+      margin-top:6px;
+      background: rgba(255,255,255,.25);
+      flex:0 0 auto;
+    }
+    .toast.ok .ic{background: var(--ok)}
+    .toast.warn .ic{background: var(--warn)}
+    .toast.bad .ic{background: var(--bad)}
+    .toast .tx{min-width:0}
+    .toast .tx .t{font-weight:800; font-size:13px}
+    .toast .tx .s{font-size:12px;color:var(--muted);margin-top:2px; word-break:break-word}
+    .toast .x{
+      margin-left:auto;
+      border:none;
+      background: transparent;
+      color:var(--muted);
+      cursor:pointer;
+      padding:4px 6px;
+      border-radius: 10px;
+    }
+    .toast .x:hover{background: rgba(255,255,255,.06); color: var(--text)}
+    .modalMask{
+      position: fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index:60;
+    }
+    .modalMask.show{display:flex}
+    .modal{
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(16,24,51,.96), rgba(11,16,32,.92));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .mh{
+      padding:14px 14px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .modal .mh h3{margin:0;font-size:14px}
+    .modal .mh .sub{margin-top:3px; font-size:12px;color:var(--muted)}
+    .modal .mb{padding:14px}
+    .modal .mf{
+      padding:12px 14px;
+      border-top:1px solid rgba(255,255,255,.10);
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .tiny{font-size:12px;color:var(--muted)}
+    .dangerText{color: rgba(251,113,133,.95); font-weight:700}
+    .okText{color: rgba(45,212,191,.95); font-weight:700}
+    .warnText{color: rgba(251,191,36,.95); font-weight:700}
+    .hide{display:none !important}
+    @media (max-width: 980px){
+      .main{grid-template-columns: 1fr}
+      .brand{min-width: 0}
+      .seatGrid{grid-template-columns: repeat(4, 1fr)}
+      .kpis{grid-template-columns: repeat(3, 1fr)}
+    }
+    @media (max-width: 560px){
+      .seatGrid{grid-template-columns: repeat(3, 1fr)}
+      .kpis{grid-template-columns: repeat(2, 1fr)}
+      .topbar{position:static}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>自习室预约系统</h1>
+          <div class="sub">单间 20 座 · 在线预约管理</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="pill" id="userPill">
+          <span class="muted">未登录</span>
+        </div>
+        <button class="btn ghost" id="btnOpenAuth">登录 / 注册</button>
+        <button class="btn" id="btnLogout">退出</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="card">
+        <div class="hd">
+          <div>
+            <h2>预约面板</h2>
+            <div class="hint">选择日期与时段后点击座位进行预约</div>
+          </div>
+          <button class="btn" id="btnToday">回到今天</button>
+        </div>
+        <div class="bd">
+          <div class="field">
+            <label>日历（点击日期查看当日预约概况）</label>
+            <div class="calendar" id="calendar"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>选择日期</label>
+              <input type="date" id="datePicker" />
+            </div>
+            <div class="field">
+              <label>显示模式</label>
+              <select id="viewMode">
+                <option value="now">按当前时刻（可用/已预约/使用中）</option>
+                <option value="slot">按所选时段（是否可预约）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label>预约类型</label>
+            <div class="seg" role="radiogroup" aria-label="预约类型">
+              <label class="chip">
+                <input type="radio" name="mode" value="hour" checked />
+                <strong>按小时</strong>
+              </label>
+              <label class="chip">
+                <input type="radio" name="mode" value="slot" />
+                <strong>按时段</strong>
+              </label>
+            </div>
+          </div>
+
+          <div id="hourMode">
+            <div class="grid2">
+              <div class="field">
+                <label>开始（小时）</label>
+                <select id="startHour"></select>
+              </div>
+              <div class="field">
+                <label>结束（小时）</label>
+                <select id="endHour"></select>
+              </div>
+            </div>
+            <div class="tiny" style="margin-top:8px">结束时间为整点，且必须大于开始时间（例如 9:00 - 12:00）</div>
+          </div>
+
+          <div id="slotMode" class="hide">
+            <div class="field">
+              <label>选择时段</label>
+              <select id="slotSelect">
+                <option value="8-12">上午（08:00 - 12:00）</option>
+                <option value="13-17">下午（13:00 - 17:00）</option>
+                <option value="18-22">晚上（18:00 - 22:00）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="n" id="kpiAvailable">-</div>
+              <div class="t">可用座位</div>
+            </div>
+            <div class="kpi">
+              <div class="n" id="kpiReserved">-</div>
+              <div class="t">已预约（未来）</div>
+            </div>
+            <div class="kpi">
+              <div class="n" id="kpiInUse">-</div>
+              <div class="t">使用中（当前）</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row end">
+            <button class="btn" id="btnRefresh">刷新状态</button>
+            <button class="btn primary" id="btnQuickMine">查看我的预约</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="seatWrap">
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>座位布局（1-20）</h2>
+              <div class="hint" id="seatHint">-</div>
+            </div>
+            <div class="seatLegend">
+              <span class="tag"><span class="dot ok"></span>可用</span>
+              <span class="tag"><span class="dot warn"></span>已预约</span>
+              <span class="tag"><span class="dot bad"></span>使用中</span>
+              <span class="tag"><span class="dot neu"></span>我的</span>
+            </div>
+          </div>
+          <div class="bd">
+            <div class="seatGrid" id="seatGrid" aria-label="座位网格"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <div>
+              <h2>个人中心 / 管理后台</h2>
+              <div class="hint">个人预约记录、取消、管理员管理</div>
+            </div>
+          </div>
+
+          <div class="panelTabs">
+            <div class="tab active" data-tab="mine">我的预约</div>
+            <div class="tab" data-tab="admin" id="adminTab">管理员后台</div>
+          </div>
+
+          <div class="bd" id="tabMine">
+            <div class="row" style="justify-content:space-between">
+              <div class="field" style="max-width:260px">
+                <label>筛选日期</label>
+                <input type="date" id="mineFilterDate" />
+              </div>
+              <div class="row end">
+                <button class="btn" id="btnMineClear">清除筛选</button>
+                <button class="btn" id="btnMineReload">刷新</button>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="list" id="mineList"></div>
+          </div>
+
+          <div class="bd hide" id="tabAdmin">
+            <div class="row" style="justify-content:space-between">
+              <div class="row" style="gap:10px">
+                <div class="field" style="max-width:180px">
+                  <label>日期</label>
+                  <input type="date" id="adminDate" />
+                </div>
+                <div class="field" style="max-width:140px">
+                  <label>座位号</label>
+                  <select id="adminSeat">
+                    <option value="">全部</option>
+                  </select>
+                </div>
+                <div class="field" style="max-width:220px">
+                  <label>用户名</label>
+                  <input type="text" id="adminUser" placeholder="支持模糊匹配" />
+                </div>
+              </div>
+              <div class="row end">
+                <button class="btn" id="btnAdminReset">重置</button>
+                <button class="btn" id="btnAdminReload">刷新</button>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="list" id="adminList"></div>
+            <div class="divider"></div>
+            <div class="tiny">
+              管理员功能：查看全量预约、强制取消、手动签到/签退（用于“使用中”状态管理）。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toastHost" id="toastHost" aria-live="polite" aria-relevant="additions"></div>
+
+  <div class="modalMask" id="authMask" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="mh">
+        <div>
+          <h3 id="authTitle">登录 / 注册</h3>
+          <div class="sub">本示例使用浏览器本地存储保存账户与预约数据</div>
+        </div>
+        <button class="btn" id="btnAuthClose">关闭</button>
+      </div>
+      <div class="mb">
+        <div class="grid2">
+          <div class="field">
+            <label>用户名</label>
+            <input type="text" id="authUser" placeholder="例如：zhangsan" autocomplete="username" />
+          </div>
+          <div class="field">
+            <label>密码</label>
+            <input type="password" id="authPass" placeholder="至少 4 位" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row" style="justify-content:space-between">
+          <div class="tiny">
+            内置管理员：<span class="okText">admin / admin123</span>
+          </div>
+          <div class="row end">
+            <button class="btn" id="btnRegister">注册</button>
+            <button class="btn primary" id="btnLogin">登录</button>
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn ghost" id="btnResetDemo">重置演示数据</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalMask" id="bookMask" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
+      <div class="mh">
+        <div>
+          <h3 id="bookTitle">确认预约</h3>
+          <div class="sub" id="bookSub">-</div>
+        </div>
+        <button class="btn" id="btnBookClose">关闭</button>
+      </div>
+      <div class="mb">
+        <div class="list" style="gap:8px">
+          <div class="item" style="align-items:center">
+            <div class="meta">
+              <div class="t">座位</div>
+              <div class="s" id="bookSeat">-</div>
+            </div>
+          </div>
+          <div class="item" style="align-items:center">
+            <div class="meta">
+              <div class="t">日期</div>
+              <div class="s" id="bookDate">-</div>
+            </div>
+          </div>
+          <div class="item" style="align-items:center">
+            <div class="meta">
+              <div class="t">时间</div>
+              <div class="s" id="bookTime">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="tiny" id="bookTips">
+          系统将进行预约冲突检测，避免同座位同时间重复预约。
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn" id="btnBookCancel">取消</button>
+        <button class="btn primary" id="btnBookConfirm">确认预约</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LS = {
+      users: "sr_users",
+      session: "sr_session",
+      reservations: "sr_reservations"
+    };
+
+    const SEAT_COUNT = 20;
+
+    const $ = (id) => document.getElementById(id);
+    const pad2 = (n) => String(n).padStart(2, "0");
+
+    const fmtDate = (d) => {
+      const y = d.getFullYear();
+      const m = pad2(d.getMonth() + 1);
+      const day = pad2(d.getDate());
+      return `${y}-${m}-${day}`;
+    };
+
+    const parseDate = (s) => {
+      const [y, m, d] = s.split("-").map(Number);
+      return new Date(y, m - 1, d, 0, 0, 0, 0);
+    };
+
+    const toMs = (dateStr, hour) => {
+      const d = parseDate(dateStr);
+      d.setHours(hour, 0, 0, 0);
+      return d.getTime();
+    };
+
+    const nowMs = () => Date.now();
+
+    const uid = () => {
+      const a = crypto.getRandomValues(new Uint32Array(2));
+      return `${a[0].toString(16)}${a[1].toString(16)}-${Date.now().toString(16)}`;
+    };
+
+    const loadJSON = (key, fallback) => {
+      try{
+        const v = localStorage.getItem(key);
+        if (!v) return fallback;
+        return JSON.parse(v);
+      }catch{
+        return fallback;
+      }
+    };
+
+    const saveJSON = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+    const toastHost = $("toastHost");
+    const toast = (type, title, desc) => {
+      const el = document.createElement("div");
+      el.className = `toast ${type || ""}`;
+      el.innerHTML = `
+        <div class="ic"></div>
+        <div class="tx">
+          <div class="t"></div>
+          <div class="s"></div>
+        </div>
+        <button class="x" aria-label="关闭">✕</button>
+      `;
+      el.querySelector(".t").textContent = title || "";
+      el.querySelector(".s").textContent = desc || "";
+      const close = () => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(6px)";
+        setTimeout(() => el.remove(), 180);
+      };
+      el.querySelector(".x").addEventListener("click", close);
+      toastHost.appendChild(el);
+      requestAnimationFrame(() => {
+        el.style.transition = "opacity .18s ease, transform .18s ease";
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0px)";
+      });
+      setTimeout(close, 4200);
+    };
+
+    const ensureSeed = () => {
+      const users = loadJSON(LS.users, []);
+      const hasAdmin = users.some(u => u.username === "admin");
+      if (!hasAdmin){
+        users.push({ username: "admin", password: "admin123", role: "admin", createdAt: Date.now() });
+        saveJSON(LS.users, users);
+      }
+      const rs = loadJSON(LS.reservations, null);
+      if (!Array.isArray(rs)) saveJSON(LS.reservations, []);
+    };
+
+    const getSession = () => loadJSON(LS.session, null);
+    const setSession = (username) => saveJSON(LS.session, { username, at: Date.now() });
+    const clearSession = () => localStorage.removeItem(LS.session);
+
+    const getUsers = () => loadJSON(LS.users, []);
+    const setUsers = (u) => saveJSON(LS.users, u);
+
+    const getReservations = () => loadJSON(LS.reservations, []);
+    const setReservations = (r) => saveJSON(LS.reservations, r);
+
+    const getUser = (username) => getUsers().find(u => u.username === username) || null;
+
+    const isAdmin = () => {
+      const s = getSession();
+      if (!s?.username) return false;
+      const u = getUser(s.username);
+      return u?.role === "admin";
+    };
+
+    const getSelectedMode = () => document.querySelector('input[name="mode"]:checked')?.value || "hour";
+
+    const getSelectedDate = () => $("datePicker").value;
+
+    const getSelectedHours = () => {
+      const mode = getSelectedMode();
+      if (mode === "slot"){
+        const [a,b] = $("slotSelect").value.split("-").map(Number);
+        return { start: a, end: b };
+      }
+      const start = Number($("startHour").value);
+      const end = Number($("endHour").value);
+      return { start, end };
+    };
+
+    const validateHours = () => {
+      const { start, end } = getSelectedHours();
+      if (!Number.isFinite(start) || !Number.isFinite(end)) return { ok: false, msg: "请选择开始与结束时间。" };
+      if (end <= start) return { ok: false, msg: "结束时间必须大于开始时间。" };
+      if (start < 0 || end > 24) return { ok: false, msg: "时间范围不合法。" };
+      return { ok: true, start, end };
+    };
+
+    const overlaps = (aStart, aEnd, bStart, bEnd) => Math.max(aStart, bStart) < Math.min(aEnd, bEnd);
+
+    const computeResStatus = (r, atMs) => {
+      if (r.canceledAt) return "canceled";
+      const startMs = toMs(r.date, r.start);
+      const endMs = toMs(r.date, r.end);
+      if (r.checkedOutAt) return "ended";
+      if (r.checkedInAt && atMs < startMs - 6 * 60 * 60 * 1000) return "reserved";
+      if (atMs < startMs) return "reserved";
+      if (atMs >= startMs && atMs < endMs) return "inuse";
+      return "ended";
+    };
+
+    const seatStateNow = (seatNo, dateStr, atMs) => {
+      const rs = getReservations().filter(r => r.seatNo === seatNo && r.date === dateStr && !r.canceledAt);
+      const active = rs
+        .map(r => ({ r, st: computeResStatus(r, atMs) }))
+        .filter(x => x.st === "reserved" || x.st === "inuse")
+        .sort((a,b) => toMs(a.r.date, a.r.start) - toMs(b.r.date, b.r.start))[0];
+
+      if (!active) return { state: "available", mine: false, who: null, ranges: [] };
+
+      const s = getSession()?.username;
+      const mine = !!s && active.r.username === s;
+      return {
+        state: active.st === "inuse" ? "inuse" : "reserved",
+        mine,
+        who: active.r.username,
+        ranges: rs.map(r => ({ start: r.start, end: r.end, username: r.username, id: r.id }))
+      };
+    };
+
+    const seatStateForSlot = (seatNo, dateStr, start, end) => {
+      const rs = getReservations().filter(r => r.seatNo === seatNo && r.date === dateStr && !r.canceledAt);
+      const slotStart = toMs(dateStr, start);
+      const slotEnd = toMs(dateStr, end);
+      const conflicts = rs.filter(r => {
+        const rStart = toMs(r.date, r.start);
+        const rEnd = toMs(r.date, r.end);
+        return overlaps(slotStart, slotEnd, rStart, rEnd) && computeResStatus(r, nowMs()) !== "ended";
+      });
+      const s = getSession()?.username;
+      const mine = !!s && conflicts.some(r => r.username === s);
+      if (conflicts.length === 0) return { state: "available", mine: false, who: null, conflicts: [] };
+      const hasInUse = conflicts.some(r => computeResStatus(r, nowMs()) === "inuse");
+      return { state: hasInUse ? "inuse" : "reserved", mine, who: conflicts[0]?.username || null, conflicts };
+    };
+
+    const setUserPill = () => {
+      const pill = $("userPill");
+      const s = getSession();
+      if (!s?.username){
+        pill.innerHTML = `<span class="muted">未登录</span>`;
+        $("btnLogout").classList.add("hide");
+        $("btnOpenAuth").classList.remove("hide");
+        $("adminTab").classList.add("hide");
+        return;
+      }
+      const u = getUser(s.username);
+      const role = u?.role === "admin" ? "管理员" : "用户";
+      pill.innerHTML = `<span>当前：</span><strong>${s.username}</strong><span class="muted">（${role}）</span>`;
+      $("btnLogout").classList.remove("hide");
+      $("btnOpenAuth").classList.add("hide");
+      $("adminTab").classList.toggle("hide", u?.role !== "admin");
+    };
+
+    const openMask = (maskEl) => {
+      maskEl.classList.add("show");
+      maskEl.setAttribute("aria-hidden", "false");
+    };
+
+    const closeMask = (maskEl) => {
+      maskEl.classList.remove("show");
+      maskEl.setAttribute("aria-hidden", "true");
+    };
+
+    const authMask = $("authMask");
+    const bookMask = $("bookMask");
+
+    const requireLogin = () => {
+      const s = getSession();
+      if (!s?.username){
+        toast("warn", "需要登录", "请先登录后再进行预约操作。");
+        openMask(authMask);
+        return false;
+      }
+      return true;
+    };
+
+    const fillHours = () => {
+      const startSel = $("startHour");
+      const endSel = $("endHour");
+      startSel.innerHTML = "";
+      endSel.innerHTML = "";
+      for (let h = 6; h <= 22; h++){
+        const o1 = document.createElement("option");
+        o1.value = String(h);
+        o1.textContent = `${pad2(h)}:00`;
+        startSel.appendChild(o1);
+
+        const o2 = document.createElement("option");
+        o2.value = String(h + 1);
+        o2.textContent = `${pad2(h + 1)}:00`;
+        endSel.appendChild(o2);
+      }
+      startSel.value = "9";
+      endSel.value = "12";
+    };
+
+    const syncModeUI = () => {
+      const mode = getSelectedMode();
+      $("hourMode").classList.toggle("hide", mode !== "hour");
+      $("slotMode").classList.toggle("hide", mode !== "slot");
+      renderAll();
+    };
+
+    const setDateTo = (dateStr) => {
+      $("datePicker").value = dateStr;
+      $("mineFilterDate").value = dateStr;
+      $("adminDate").value = dateStr;
+      renderAll();
+    };
+
+    const getSeatHintText = () => {
+      const dateStr = getSelectedDate();
+      const view = $("viewMode").value;
+      if (!dateStr) return "请选择日期。";
+      const { start, end } = getSelectedHours();
+      if (view === "slot"){
+        return `当前按所选时段显示：${dateStr} ${pad2(start)}:00 - ${pad2(end)}:00（点击座位尝试预约）`;
+      }
+      const now = new Date();
+      const nowStr = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+      return `当前按实时状态显示：${dateStr}（系统时间 ${nowStr}）`;
+    };
+
+    const seatGrid = $("seatGrid");
+
+    const renderSeats = () => {
+      const dateStr = getSelectedDate();
+      $("seatHint").textContent = getSeatHintText();
+      seatGrid.innerHTML = "";
+      if (!dateStr){
+        for (let i = 1; i <= SEAT_COUNT; i++){
+          const el = document.createElement("button");
+          el.className = "seat disabled";
+          el.type = "button";
+          el.disabled = true;
+          el.innerHTML = `<div class="badge">-</div><div class="no">${i}</div><div class="st">请选择日期</div><div class="me"></div><div class="bar"></div>`;
+          seatGrid.appendChild(el);
+        }
+        return;
+      }
+
+      const view = $("viewMode").value;
+      const at = nowMs();
+      const hv = validateHours();
+      let slot = null;
+      if (view === "slot" && hv.ok) slot = { start: hv.start, end: hv.end };
+
+      let nAvail = 0, nRes = 0, nUse = 0;
+
+      for (let i = 1; i <= SEAT_COUNT; i++){
+        let info;
+        if (view === "slot" && slot){
+          info = seatStateForSlot(i, dateStr, slot.start, slot.end);
+        }else{
+          info = seatStateNow(i, dateStr, at);
+        }
+
+        const state = info.state;
+        const mine = info.mine;
+
+        if (state === "available") nAvail++;
+        if (state === "reserved") nRes++;
+        if (state === "inuse") nUse++;
+
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = `seat ${state} ${mine ? "mine" : ""}`;
+        el.setAttribute("aria-label", `座位 ${i}`);
+        const badgeText = state === "available" ? "可用" : (state === "reserved" ? "已预约" : "使用中");
+        const sub = (() => {
+          if (view === "slot"){
+            if (!slot) return "请先设置合法时段";
+            if (state === "available") return "可预约该时段";
+            const who = info.who ? `占用：${info.who}` : "该时段冲突";
+            return who;
+          }
+          if (state === "available") return "可用";
+          return info.who ? `占用：${info.who}` : "不可用";
+        })();
+        const me = mine ? "我的预约" : "";
+        el.innerHTML = `<div class="badge">${badgeText}</div><div class="no">${i}</div><div class="st">${sub}</div><div class="me">${me}</div><div class="bar"></div>`;
+
+        const canClick = (() => {
+          if (!validateHours().ok) return false;
+          const s = getSession();
+          if (!s?.username) return true;
+          if ($("viewMode").value === "slot") return true;
+          return true;
+        })();
+
+        if (!canClick){
+          el.classList.add("disabled");
+          el.disabled = true;
+        }else{
+          el.addEventListener("click", () => onClickSeat(i));
+        }
+
+        seatGrid.appendChild(el);
+      }
+
+      $("kpiAvailable").textContent = String(nAvail);
+      $("kpiReserved").textContent = String(nRes);
+      $("kpiInUse").textContent = String(nUse);
+    };
+
+    let pendingSeat = null;
+
+    const onClickSeat = (seatNo) => {
+      const dateStr = getSelectedDate();
+      const hv = validateHours();
+      if (!dateStr){
+        toast("warn", "请选择日期", "需要先选择预约日期。");
+        return;
+      }
+      if (!hv.ok){
+        toast("warn", "时间不合法", hv.msg);
+        return;
+      }
+      if (!requireLogin()) return;
+
+      const now = Date.now();
+      const startMs = toMs(dateStr, hv.start);
+      if (startMs < now - 5 * 60 * 1000){
+        toast("warn", "无法预约过去时间", "请选择当前或未来时段。");
+        return;
+      }
+
+      pendingSeat = { seatNo, date: dateStr, start: hv.start, end: hv.end };
+
+      $("bookSeat").textContent = `${seatNo} 号座位`;
+      $("bookDate").textContent = dateStr;
+      $("bookTime").textContent = `${pad2(hv.start)}:00 - ${pad2(hv.end)}:00`;
+      $("bookSub").textContent = `将为你创建预约：座位 ${seatNo} · ${dateStr} · ${pad2(hv.start)}:00-${pad2(hv.end)}:00`;
+      $("bookTips").innerHTML = `系统将检测：<span class="warnText">同座位时间冲突</span> 与 <span class="warnText">个人时间冲突</span>，避免重复预约。`;
+      openMask(bookMask);
+    };
+
+    const detectConflicts = (username, seatNo, dateStr, start, end) => {
+      const rs = getReservations().filter(r => r.date === dateStr && !r.canceledAt);
+      const startMs = toMs(dateStr, start);
+      const endMs = toMs(dateStr, end);
+
+      const seatConflicts = rs.filter(r => r.seatNo === seatNo && overlaps(startMs, endMs, toMs(r.date, r.start), toMs(r.date, r.end)));
+      const userConflicts = rs.filter(r => r.username === username && overlaps(startMs, endMs, toMs(r.date, r.start), toMs(r.date, r.end)));
+
+      return { seatConflicts, userConflicts };
+    };
+
+    const createReservation = (seatNo, dateStr, start, end) => {
+      const s = getSession();
+      const username = s?.username;
+      if (!username) return { ok: false, msg: "未登录。" };
+
+      const { seatConflicts, userConflicts } = detectConflicts(username, seatNo, dateStr, start, end);
+
+      if (seatConflicts.length > 0){
+        const x = seatConflicts[0];
+        return { ok: false, msg: `预约失败：该座位已在 ${pad2(x.start)}:00-${pad2(x.end)}:00 被预约。` };
+      }
+      if (userConflicts.length > 0){
+        const x = userConflicts[0];
+        return { ok: false, msg: `预约失败：你在同一时间段已有预约（座位${x.seatNo}，${pad2(x.start)}:00-${pad2(x.end)}:00）。` };
+      }
+
+      const rs = getReservations();
+      rs.push({
+        id: uid(),
+        username,
+        seatNo,
+        date: dateStr,
+        start,
+        end,
+        createdAt: Date.now(),
+        canceledAt: null,
+        checkedInAt: null,
+        checkedOutAt: null
+      });
+      setReservations(rs);
+      return { ok: true };
+    };
+
+    const cancelReservation = (id, byAdmin) => {
+      const rs = getReservations();
+      const idx = rs.findIndex(r => r.id === id);
+      if (idx < 0) return { ok: false, msg: "记录不存在。" };
+
+      const s = getSession();
+      const me = s?.username;
+      const admin = isAdmin();
+
+      if (!admin && rs[idx].username !== me){
+        return { ok: false, msg: "无权限取消他人预约。" };
+      }
+
+      if (rs[idx].canceledAt) return { ok: false, msg: "该预约已取消。" };
+
+      rs[idx].canceledAt = Date.now();
+      setReservations(rs);
+      return { ok: true, admin: !!byAdmin };
+    };
+
+    const adminCheckIn = (id) => {
+      if (!isAdmin()) return { ok: false, msg: "无权限。" };
+      const rs = getReservations();
+      const r = rs.find(x => x.id === id);
+      if (!r) return { ok: false, msg: "记录不存在。" };
+      if (r.canceledAt) return { ok: false, msg: "已取消，无法签到。" };
+      if (r.checkedOutAt) return { ok: false, msg: "已结束，无法签到。" };
+      if (!r.checkedInAt) r.checkedInAt = Date.now();
+      setReservations(rs);
+      return { ok: true };
+    };
+
+    const adminCheckOut = (id) => {
+      if (!isAdmin()) return { ok: false, msg: "无权限。" };
+      const rs = getReservations();
+      const r = rs.find(x => x.id === id);
+      if (!r) return { ok: false, msg: "记录不存在。" };
+      if (r.canceledAt) return { ok: false, msg: "已取消，无法签退。" };
+      if (!r.checkedInAt) r.checkedInAt = Date.now();
+      if (!r.checkedOutAt) r.checkedOutAt = Date.now();
+      setReservations(rs);
+      return { ok: true };
+    };
+
+    const resLabel = (r) => `${r.date} ${pad2(r.start)}:00-${pad2(r.end)}:00 · 座位${r.seatNo}`;
+
+    const renderMine = () => {
+      const list = $("mineList");
+      const s = getSession();
+      if (!s?.username){
+        list.innerHTML = `<div class="empty">请先登录后查看个人预约记录。</div>`;
+        return;
+      }
+
+      const fd = $("mineFilterDate").value || "";
+      const all = getReservations().filter(r => r.username === s.username);
+      const rs = (fd ? all.filter(r => r.date === fd) : all)
+        .sort((a,b) => toMs(b.date, b.start) - toMs(a.date, a.start));
+
+      if (rs.length === 0){
+        list.innerHTML = `<div class="empty">暂无预约记录。</div>`;
+        return;
+      }
+
+      const at = nowMs();
+      list.innerHTML = "";
+      rs.forEach(r => {
+        const st = computeResStatus(r, at);
+        const stateText = r.canceledAt ? "已取消" : (st === "inuse" ? "使用中" : (st === "reserved" ? "已预约" : "已结束"));
+        const stateCls = r.canceledAt ? "dangerText" : (st === "inuse" ? "dangerText" : (st === "reserved" ? "warnText" : "muted"));
+        const canCancel = !r.canceledAt && toMs(r.date, r.start) > at + 2 * 60 * 1000;
+
+        const item = document.createElement("div");
+        item.className = "item";
+        const rightBtns = [];
+        if (canCancel){
+          rightBtns.push(`<button class="btn danger" data-act="cancel" data-id="${r.id}">取消预约</button>`);
+        }else{
+          if (!r.canceledAt) rightBtns.push(`<span class="tiny muted">不可取消</span>`);
+        }
+        item.innerHTML = `
+          <div class="meta">
+            <div class="t">${resLabel(r)}</div>
+            <div class="s">状态：<span class="${stateCls}">${stateText}</span></div>
+          </div>
+          <div class="act">
+            ${rightBtns.join("")}
+          </div>
+        `;
+        item.querySelectorAll("button[data-act='cancel']").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const ret = cancelReservation(btn.dataset.id, false);
+            if (ret.ok){
+              toast("ok", "已取消预约", resLabel(r));
+              renderAll();
+            }else{
+              toast("bad", "取消失败", ret.msg);
+            }
+          });
+        });
+        list.appendChild(item);
+      });
+    };
+
+    const renderAdmin = () => {
+      const list = $("adminList");
+      if (!isAdmin()){
+        list.innerHTML = `<div class="empty">仅管理员可查看后台管理界面。</div>`;
+        return;
+      }
+
+      const date = $("adminDate").value || "";
+      const seat = $("adminSeat").value || "";
+      const user = ($("adminUser").value || "").trim();
+
+      let rs = getReservations().slice();
+
+      if (date) rs = rs.filter(r => r.date === date);
+      if (seat) rs = rs.filter(r => String(r.seatNo) === seat);
+      if (user) rs = rs.filter(r => r.username.toLowerCase().includes(user.toLowerCase()));
+
+      rs.sort((a,b) => toMs(b.date, b.start) - toMs(a.date, a.start));
+
+      if (rs.length === 0){
+        list.innerHTML = `<div class="empty">没有符合条件的预约记录。</div>`;
+        return;
+      }
+
+      const at = nowMs();
+      list.innerHTML = "";
+      rs.forEach(r => {
+        const st = computeResStatus(r, at);
+        const stateText = r.canceledAt ? "已取消" : (st === "inuse" ? "使用中" : (st === "reserved" ? "已预约" : "已结束"));
+        const stateCls = r.canceledAt ? "dangerText" : (st === "inuse" ? "dangerText" : (st === "reserved" ? "warnText" : "muted"));
+        const item = document.createElement("div");
+        item.className = "item";
+        const canCancel = !r.canceledAt;
+        const canCheckIn = !r.canceledAt && !r.checkedOutAt;
+        const canCheckOut = !r.canceledAt && !r.checkedOutAt;
+
+        item.innerHTML = `
+          <div class="meta">
+            <div class="t">${resLabel(r)}</div>
+            <div class="s">用户：<strong>${r.username}</strong> · 状态：<span class="${stateCls}">${stateText}</span></div>
+          </div>
+          <div class="act">
+            ${canCheckIn ? `<button class="btn ok" data-act="in" data-id="${r.id}">签到</button>` : `<span class="tiny muted">-</span>`}
+            ${canCheckOut ? `<button class="btn" data-act="out" data-id="${r.id}">签退</button>` : ``}
+            ${canCancel ? `<button class="btn danger" data-act="cancel" data-id="${r.id}">强制取消</button>` : ``}
+          </div>
+        `;
+
+        item.querySelectorAll("button[data-act='cancel']").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const ret = cancelReservation(btn.dataset.id, true);
+            if (ret.ok){
+              toast("ok", "已强制取消", `${resLabel(r)} · 用户 ${r.username}`);
+              renderAll();
+            }else{
+              toast("bad", "操作失败", ret.msg);
+            }
+          });
+        });
+
+        item.querySelectorAll("button[data-act='in']").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const ret = adminCheckIn(btn.dataset.id);
+            if (ret.ok){
+              toast("ok", "签到成功", `${resLabel(r)} · 用户 ${r.username}`);
+              renderAll();
+            }else{
+              toast("bad", "签到失败", ret.msg);
+            }
+          });
+        });
+
+        item.querySelectorAll("button[data-act='out']").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const ret = adminCheckOut(btn.dataset.id);
+            if (ret.ok){
+              toast("ok", "签退成功", `${resLabel(r)} · 用户 ${r.username}`);
+              renderAll();
+            }else{
+              toast("bad", "签退失败", ret.msg);
+            }
+          });
+        });
+
+        list.appendChild(item);
+      });
+    };
+
+    const setActiveTab = (name) => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+      $("tabMine").classList.toggle("hide", name !== "mine");
+      $("tabAdmin").classList.toggle("hide", name !== "admin");
+      renderAll();
+    };
+
+    const calendarEl = $("calendar");
+    let calCursor = new Date();
+
+    const calDow = ["一","二","三","四","五","六","日"];
+
+    const monthStart = (d) => new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0);
+    const monthEnd = (d) => new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0);
+
+    const calFirstCellDate = (d) => {
+      const s = monthStart(d);
+      const dow = (s.getDay() + 6) % 7;
+      const first = new Date(s);
+      first.setDate(s.getDate() - dow);
+      return first;
+    };
+
+    const dailyStats = (dateStr) => {
+      const rs = getReservations().filter(r => r.date === dateStr && !r.canceledAt);
+      const at = nowMs();
+      let inuse = 0, reserved = 0;
+      rs.forEach(r => {
+        const st = computeResStatus(r, at);
+        if (st === "inuse") inuse++;
+        if (st === "reserved") reserved++;
+      });
+      return { inuse, reserved, total: rs.length };
+    };
+
+    const renderCalendar = () => {
+      const m = calCursor.getMonth() + 1;
+      const y = calCursor.getFullYear();
+      const cur = getSelectedDate();
+      const ms = monthStart(calCursor);
+      const me = monthEnd(calCursor);
+      const first = calFirstCellDate(calCursor);
+
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <div class="calHd">
+          <button class="btn" type="button" data-cal="prev">◀</button>
+          <div class="m">${y} 年 ${m} 月</div>
+          <button class="btn" type="button" data-cal="next">▶</button>
+        </div>
+        <div class="calGrid" id="calGrid"></div>
+      `;
+
+      const grid = wrap.querySelector("#calGrid");
+      calDow.forEach(d => {
+        const el = document.createElement("div");
+        el.className = "calDow";
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      for (let i = 0; i < 42; i++){
+        const d = new Date(first);
+        d.setDate(first.getDate() + i);
+        const dateStr = fmtDate(d);
+        const inMonth = d.getMonth() === calCursor.getMonth();
+        const sel = cur && dateStr === cur;
+
+        const st = dailyStats(dateStr);
+
+        const cell = document.createElement("div");
+        cell.className = `calCell ${inMonth ? "" : "mute"} ${sel ? "sel" : ""}`;
+        cell.innerHTML = `
+          <div class="d">${d.getDate()}</div>
+          <div class="pips"></div>
+        `;
+
+        const pips = cell.querySelector(".pips");
+        const seatCap = SEAT_COUNT;
+        const reservedRatio = Math.min(1, st.reserved / seatCap);
+        const inUseRatio = Math.min(1, st.inuse / seatCap);
+
+        const mkPip = (cls) => {
+          const p = document.createElement("span");
+          p.className = `pip ${cls}`;
+          pips.appendChild(p);
+        };
+
+        const n1 = Math.round(reservedRatio * 4);
+        const n2 = Math.round(inUseRatio * 3);
+
+        for (let k = 0; k < n2; k++) mkPip("bad");
+        for (let k = 0; k < n1; k++) mkPip("warn");
+        if (st.total === 0) mkPip("ok");
+
+        if (inMonth){
+          cell.addEventListener("click", () => {
+            setDateTo(dateStr);
+          });
+        }
+
+        grid.appendChild(cell);
+      }
+
+      calendarEl.innerHTML = "";
+      calendarEl.appendChild(wrap);
+
+      wrap.querySelectorAll("button[data-cal]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const t = btn.dataset.cal;
+          const d = new Date(calCursor);
+          d.setMonth(d.getMonth() + (t === "prev" ? -1 : 1));
+          calCursor = d;
+          renderCalendar();
+        });
+      });
+    };
+
+    const renderAll = () => {
+      setUserPill();
+      renderCalendar();
+      renderSeats();
+      renderMine();
+      if (isAdmin()) renderAdmin();
+    };
+
+    const initAdminSelectors = () => {
+      const sel = $("adminSeat");
+      for (let i = 1; i <= SEAT_COUNT; i++){
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = `${i}号`;
+        sel.appendChild(o);
+      }
+    };
+
+    const resetDemo = () => {
+      localStorage.removeItem(LS.users);
+      localStorage.removeItem(LS.session);
+      localStorage.removeItem(LS.reservations);
+      ensureSeed();
+      const today = fmtDate(new Date());
+      const rs = [
+        { id: uid(), username: "admin", seatNo: 3, date: today, start: 9, end: 12, createdAt: Date.now() - 500000, canceledAt: null, checkedInAt: null, checkedOutAt: null },
+        { id: uid(), username: "admin", seatNo: 7, date: today, start: 14, end: 16, createdAt: Date.now() - 420000, canceledAt: null, checkedInAt: null, checkedOutAt: null },
+      ];
+      setReservations(rs);
+      toast("ok", "已重置演示数据", "已恢复内置管理员并生成少量示例预约。");
+      setDateTo(today);
+      closeMask(authMask);
+      renderAll();
+    };
+
+    const init = () => {
+      ensureSeed();
+      fillHours();
+      initAdminSelectors();
+
+      const today = fmtDate(new Date());
+      $("datePicker").value = today;
+      $("mineFilterDate").value = "";
+      $("adminDate").value = today;
+
+      const s = getSession();
+      if (!s?.username){
+        $("btnLogout").classList.add("hide");
+      }
+
+      document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener("change", syncModeUI));
+      $("slotSelect").addEventListener("change", renderAll);
+      $("startHour").addEventListener("change", () => {
+        const s = Number($("startHour").value);
+        const e = Number($("endHour").value);
+        if (e <= s) $("endHour").value = String(s + 1);
+        renderAll();
+      });
+      $("endHour").addEventListener("change", renderAll);
+
+      $("datePicker").addEventListener("change", () => {
+        const dateStr = getSelectedDate();
+        if (dateStr){
+          const d = parseDate(dateStr);
+          calCursor = new Date(d.getFullYear(), d.getMonth(), 1);
+          renderAll();
+        }
+      });
+
+      $("viewMode").addEventListener("change", renderAll);
+
+      $("btnOpenAuth").addEventListener("click", () => openMask(authMask));
+      $("btnAuthClose").addEventListener("click", () => closeMask(authMask));
+      authMask.addEventListener("click", (e) => {
+        if (e.target === authMask) closeMask(authMask);
+      });
+
+      $("btnBookClose").addEventListener("click", () => closeMask(bookMask));
+      $("btnBookCancel").addEventListener("click", () => closeMask(bookMask));
+      bookMask.addEventListener("click", (e) => {
+        if (e.target === bookMask) closeMask(bookMask);
+      });
+
+      $("btnLogin").addEventListener("click", () => {
+        const u = ($("authUser").value || "").trim();
+        const p = $("authPass").value || "";
+        if (!u || !p){
+          toast("warn", "登录失败", "请输入用户名与密码。");
+          return;
+        }
+        const users = getUsers();
+        const hit = users.find(x => x.username === u && x.password === p);
+        if (!hit){
+          toast("bad", "登录失败", "用户名或密码错误。");
+          return;
+        }
+        setSession(u);
+        toast("ok", "登录成功", `欢迎，${u}。`);
+        closeMask(authMask);
+        renderAll();
+      });
+
+      $("btnRegister").addEventListener("click", () => {
+        const u = ($("authUser").value || "").trim();
+        const p = $("authPass").value || "";
+        if (!u || !p){
+          toast("warn", "注册失败", "请输入用户名与密码。");
+          return;
+        }
+        if (u.length < 2){
+          toast("warn", "注册失败", "用户名至少 2 位。");
+          return;
+        }
+        if (p.length < 4){
+          toast("warn", "注册失败", "密码至少 4 位。");
+          return;
+        }
+        const users = getUsers();
+        if (users.some(x => x.username === u)){
+          toast("bad", "注册失败", "用户名已存在。");
+          return;
+        }
+        users.push({ username: u, password: p, role: "user", createdAt: Date.now() });
+        setUsers(users);
+        setSession(u);
+        toast("ok", "注册成功", `已自动登录：${u}。`);
+        closeMask(authMask);
+        renderAll();
+      });
+
+      $("btnLogout").addEventListener("click", () => {
+        clearSession();
+        toast("ok", "已退出登录", "你可以继续浏览座位状态，但预约需登录。");
+        renderAll();
+      });
+
+      $("btnResetDemo").addEventListener("click", resetDemo);
+
+      $("btnBookConfirm").addEventListener("click", () => {
+        if (!pendingSeat) return;
+        const ret = createReservation(pendingSeat.seatNo, pendingSeat.date, pendingSeat.start, pendingSeat.end);
+        if (ret.ok){
+          toast("ok", "预约成功", `已预约：座位${pendingSeat.seatNo} · ${pendingSeat.date} · ${pad2(pendingSeat.start)}:00-${pad2(pendingSeat.end)}:00`);
+          closeMask(bookMask);
+          pendingSeat = null;
+          renderAll();
+        }else{
+          toast("bad", "预约失败", ret.msg);
+        }
+      });
+
+      $("btnToday").addEventListener("click", () => {
+        const t = fmtDate(new Date());
+        calCursor = new Date();
+        setDateTo(t);
+      });
+
+      $("btnRefresh").addEventListener("click", () => {
+        toast("ok", "已刷新", "座位与列表已更新。");
+        renderAll();
+      });
+
+      $("btnQuickMine").addEventListener("click", () => {
+        setActiveTab("mine");
+        const s = getSession();
+        if (!s?.username) openMask(authMask);
+      });
+
+      document.querySelectorAll(".tab").forEach(t => {
+        t.addEventListener("click", () => {
+          const name = t.dataset.tab;
+          if (name === "admin" && !isAdmin()){
+            toast("warn", "无权限", "当前账号不是管理员。");
+            return;
+          }
+          setActiveTab(name);
+        });
+      });
+
+      $("btnMineReload").addEventListener("click", renderAll);
+      $("btnMineClear").addEventListener("click", () => {
+        $("mineFilterDate").value = "";
+        renderAll();
+      });
+      $("mineFilterDate").addEventListener("change", renderAll);
+
+      $("btnAdminReload").addEventListener("click", renderAll);
+      $("btnAdminReset").addEventListener("click", () => {
+        $("adminSeat").value = "";
+        $("adminUser").value = "";
+        $("adminDate").value = getSelectedDate() || fmtDate(new Date());
+        renderAll();
+      });
+      $("adminDate").addEventListener("change", renderAll);
+      $("adminSeat").addEventListener("change", renderAll);
+      $("adminUser").addEventListener("input", () => {
+        clearTimeout(window.__admTO);
+        window.__admTO = setTimeout(renderAll, 200);
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape"){
+          closeMask(authMask);
+          closeMask(bookMask);
+        }
+      });
+
+      setUserPill();
+      syncModeUI();
+
+      setInterval(() => {
+        if ($("viewMode").value === "now") renderAll();
+      }, 60000);
+
+      renderAll();
+    };
+
+    init();
+  </script>
+</body>
+</html>
